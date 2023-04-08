@@ -5,72 +5,59 @@ export const ToastContext = createContext([]);
 function useEscapeKey(callback) {
   useEffect(() => {
     function handleKeyDown(event) {
-      if (event.code === 'Escape') {
+      if (event.code === "Escape") {
         callback(event);
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [callback]);
 }
 
-function ToastProvider({children}) {
+function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const handleEscape = useCallback(() => {
-    handleDismissAllToast();
-  }, []);
-
-  useEscapeKey(()=> {
-    handleEscape();
-  });
-
-  const handleNewToast = function( newToast ) {
+  const handleNewToast = function (newToast) {
     const prevToasts = [...toasts];
 
-    prevToasts.push( {
+    prevToasts.push({
       id: crypto.randomUUID(),
-      hidden: false,
-      ...newToast
-    } );
+      ...newToast,
+    });
 
     setToasts(prevToasts);
-  }
+  };
 
-  const handleDismissToast = function(id) {
-    const updatedToasts = [...toasts].map(toastItem => {
-      const currentToast = {...toastItem};
-
-      if (currentToast.id === id) {
-        currentToast.hidden = true;
-      }
-
-      return currentToast;
-    });
+  const handleDismissToast = function (id) {
+    const updatedToasts = [...toasts].filter(
+      (toastItem) => toastItem.id !== id
+    );
 
     setToasts(updatedToasts);
+  };
+
+  function dismissAllToasts() {
+    setToasts([]);
   }
 
-  const handleDismissAllToast = function() {
-    const prevToasts = [...toasts];
+  const handleEscape = useCallback(() => {
+    dismissAllToasts();
+  }, []);
 
-    prevToasts.map(currentToast => {
-      return {...currentToast, hidden: true};
-    });
-
-    setToasts(prevToasts);
-  }
+  useEscapeKey(() => {
+    handleEscape();
+  });
 
   return (
     <ToastContext.Provider
       value={{
         toasts,
         handleNewToast,
-        handleDismissToast
+        handleDismissToast,
       }}
     >
       {children}
